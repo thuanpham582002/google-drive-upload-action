@@ -35,4 +35,4 @@ inputs:
 
 runs:
   using: docker
-  image: Dockerfile
+  image: docker://ghcr.io/thuanpham582002/google-drive-upload-action:latest

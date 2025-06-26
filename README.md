@@ -1,5 +1,6 @@
-[![build](https://github.com/adityak74/google-drive-upload-git-action/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/adityak74/google-drive-upload-git-action/actions)
+[![build](https://github.com/thuanpham582002/google-drive-upload-git-action/actions/workflows/build-and-push.yml/badge.svg?branch=main)](https://github.com/thuanpham582002/google-drive-upload-git-action/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/adityak74/google-drive-upload-git-action)](https://goreportcard.com/report/github.com/adityak74/google-drive-upload-git-action)
+[![Docker Image](https://ghcr-badge.egpl.dev/thuanpham582002/google-drive-upload-git-action/latest_tag?trim=major&label=Docker%20Image)](https://github.com/thuanpham582002/google-drive-upload-git-action/pkgs/container/google-drive-upload-git-action)
 
 # google-drive-upload-git-action
 Github action that uploads files to Google Drive.
@@ -8,7 +9,16 @@ Github action that uploads files to Google Drive.
 
 **This only works with a Google Service Account!**
 
+## 🐳 Docker Image
+This action now runs using a pre-built Docker image hosted on GitHub Container Registry:
+- **Image**: `ghcr.io/thuanpham582002/google-drive-upload-git-action:latest`
+- **Package URL**: https://github.com/thuanpham582002/google-drive-upload-git-action/pkgs/container/google-drive-upload-git-action
+
 Thanks to [Team Tumbleweed](https://github.com/team-tumbleweed) for developing the initial version of this actions package.
+
+Forked from [adityak74/google-drive-upload-git-action](https://github.com/adityak74/google-drive-upload-git-action) with Docker image optimization.
+
+## 🔧 Setup
 
 To make a GSA go to the [Credentials Dashboard](https://console.cloud.google.com/apis/credentials). You will need to download the **.json key** and base64 encode it. You will use this string as the `credentials` input. To convert the *json* file to base64 without having to use an online tool (which is insecure), use this command:
 
@@ -65,11 +75,11 @@ Required: **YES**.
 
 A base64 encoded string with the [GSA credentials](https://stackoverflow.com/questions/46287267/how-can-i-get-the-file-service-account-json-for-google-translate-api/46290808).
 
+# Usage Examples
 
-# Usage Example
-
-## Simple Workflow
+## 📋 Simple Workflow
 In this example we stored the folderId and credentials as action secrets. This is highly recommended as leaking your credentials key will allow anyone to use your service account.
+
 ```yaml
 # .github/workflows/main.yml
 name: Main
@@ -80,9 +90,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Archive files
         run: |
@@ -90,25 +99,104 @@ jobs:
           sudo apt-get install zip
           zip -r archive.zip *
 
-      - name: Upload to gdrive
-        uses: adityak74/google-drive-upload-git-action@main
+      - name: Upload to Google Drive
+        uses: thuanpham582002/google-drive-upload-git-action@main
         with:
-          credentials: ${{ secrets.credentials }}
+          credentials: ${{ secrets.CREDENTIALS }}
           filename: "archive.zip"
-          folderId: ${{ secrets.folderId }}
+          folderId: ${{ secrets.FOLDER_ID }}
           name: "documentation.zip" # optional string
           overwrite: "true" # optional boolean
+```
+
+## 📁 Mirror Directory Structure
+```yaml
+# .github/workflows/mirror.yml
+name: Mirror Directory Structure
+on: [push]
+
+jobs:
+  upload_with_structure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Make Directory Structure
         run: |
-          mkdir -p w/x/y
-          date +%s > w/x/y/z
-      - name: Mirror Directory Structure
-        uses: adityak74/google-drive-upload-git-action@main
+          mkdir -p project/src/components
+          echo "console.log('Hello World');" > project/src/components/App.js
+          echo "# Project Documentation" > project/README.md
+
+      - name: Upload with Directory Structure
+        uses: thuanpham582002/google-drive-upload-git-action@main
         with:
-          credentials: ${{ secrets.DRIVE_CREDENTIALS }}
-          filename: w/x/y/z
-          folderId: ${{ secrets.folderId }}
+          credentials: ${{ secrets.CREDENTIALS }}
+          filename: "project/**/*"
+          folderId: ${{ secrets.FOLDER_ID }}
           overwrite: "true"
           mirrorDirectoryStructure: "true"
-          
 ```
+
+## 🔄 Multiple Files Upload
+```yaml
+# .github/workflows/multiple-files.yml
+name: Upload Multiple Files
+on: [push]
+
+jobs:
+  upload_multiple:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate multiple files
+        run: |
+          echo "File 1 content" > file1.txt
+          echo "File 2 content" > file2.txt
+          echo "File 3 content" > file3.txt
+
+      - name: Upload multiple files
+        uses: thuanpham582002/google-drive-upload-git-action@main
+        with:
+          credentials: ${{ secrets.CREDENTIALS }}
+          filename: "*.txt"
+          folderId: ${{ secrets.FOLDER_ID }}
+          namePrefix: "backup-"
+          overwrite: "true"
+```
+
+## 🏷️ Using Specific Version
+For production use, it's recommended to pin to a specific version instead of `@main`:
+
+```yaml
+- name: Upload to Google Drive
+  uses: thuanpham582002/google-drive-upload-git-action@v1.0.0
+  with:
+    credentials: ${{ secrets.CREDENTIALS }}
+    filename: "build/**/*"
+    folderId: ${{ secrets.FOLDER_ID }}
+```
+
+## 🔐 Setting up Secrets
+1. Go to your repository → Settings → Secrets and Variables → Actions
+2. Add the following secrets:
+   - `CREDENTIALS`: Your base64 encoded Google Service Account JSON
+   - `FOLDER_ID`: The Google Drive folder ID where files will be uploaded
+
+## 📦 Docker Usage
+You can also use the Docker image directly:
+
+```bash
+docker pull ghcr.io/thuanpham582002/google-drive-upload-git-action:latest
+```
+
+## 🚀 Latest Updates
+- ✅ Migrated to Docker image for faster execution
+- ✅ Automated builds via GitHub Actions
+- ✅ Support for directory structure mirroring
+- ✅ Multiple file upload with wildcards
+- ✅ Customizable file naming with prefixes
